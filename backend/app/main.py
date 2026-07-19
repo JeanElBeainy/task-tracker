@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, status
 
+from app.business_rules import validate_status_transition
 from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
 from app import storage
 
@@ -48,6 +49,11 @@ def get_task(task_id: str) -> TaskResponse:
 
 @app.patch("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])
 def update_task(task_id: str, payload: TaskUpdate) -> TaskResponse:
+    if payload.status is not None:
+        existing = storage.get_task_by_id(task_id)
+        if existing is None:
+            raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
+        validate_status_transition(existing.status, payload.status)
     updated = storage.update_task(task_id, payload)
     if updated is None:
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")

@@ -22,6 +22,9 @@ backend/
 │   ├── __init__.py
 │   ├── main.py       # FastAPI app instance + /health endpoint
 │   └── data/          # Reserved for tasks.json (future ADR-001 persistence)
+├── tests/
+│   ├── __init__.py
+│   └── test_health.py
 ├── requirements.txt
 ├── .env.example
 ├── .gitignore
@@ -81,6 +84,12 @@ Expected response:
   "status": "ok",
   "timestamp": "2026-07-19T12:34:56.789012+00:00"
 }
+```
+
+## Running Tests
+
+```bash
+pytest -v
 ```
 
 ## API Documentation

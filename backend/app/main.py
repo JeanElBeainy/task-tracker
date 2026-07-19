@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, status
 
-from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus
+from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
 from app import storage
 
 # Load variables from .env (e.g. PORT, APP_ENV) into the environment
@@ -44,3 +44,11 @@ def get_task(task_id: str) -> TaskResponse:
     if task is None:
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
     return task
+
+
+@app.patch("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])
+def update_task(task_id: str, payload: TaskUpdate) -> TaskResponse:
+    updated = storage.update_task(task_id, payload)
+    if updated is None:
+        raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
+    return updated

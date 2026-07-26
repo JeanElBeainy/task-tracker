@@ -134,6 +134,50 @@ def test_patch_same_status_is_noop_returns_200(client, created_task):
     assert r.status_code == 200
 
 
+def test_patch_invalid_status_value_not_in_enum_returns_422(client, created_task):
+    task_id = created_task["id"]
+    r = client.patch(f"/tasks/{task_id}", json={"status": "BogusStatus"})
+    assert r.status_code == 422
+    assert "detail" in r.json()
+
+
+def test_patch_empty_body_returns_200_unchanged(client, created_task):
+    task_id = created_task["id"]
+    r = client.patch(f"/tasks/{task_id}", json={})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["title"] == created_task["title"]
+    assert body["status"] == created_task["status"]
+
+
+def test_patch_invalid_priority_value_not_in_enum_returns_422(client, created_task):
+    task_id = created_task["id"]
+    r = client.patch(f"/tasks/{task_id}", json={"priority": "Urgent"})
+    assert r.status_code == 422
+    assert "detail" in r.json()
+
+
+def test_patch_unknown_field_returns_422(client, created_task):
+    task_id = created_task["id"]
+    r = client.patch(f"/tasks/{task_id}", json={"color": "red"})
+    assert r.status_code == 422
+    assert "detail" in r.json()
+
+
+def test_patch_blank_title_returns_422(client, created_task):
+    task_id = created_task["id"]
+    r = client.patch(f"/tasks/{task_id}", json={"title": "   "})
+    assert r.status_code == 422
+    assert "detail" in r.json()
+
+
+def test_patch_wrong_type_for_enum_field_returns_422(client, created_task):
+    task_id = created_task["id"]
+    r = client.patch(f"/tasks/{task_id}", json={"priority": 42})
+    assert r.status_code == 422
+    assert "detail" in r.json()
+
+
 # ---------------------------------------------------------------------------
 # DELETE /tasks/{id}
 # ---------------------------------------------------------------------------

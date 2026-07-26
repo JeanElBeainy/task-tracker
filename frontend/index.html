@@ -70,6 +70,7 @@
     .board {
       flex: 1;
       display: flex;
+      flex-wrap: wrap;
       gap: 20px;
       padding: 24px 32px;
       overflow-x: auto;
@@ -246,9 +247,9 @@
     /* Loading indicator — hidden unless .board.state-loading */
     #board-loading {
       display: none;
+      flex: 0 0 100%;
       align-items: center;
       justify-content: center;
-      width: 100%;
       padding: 48px 0;
       color: var(--color-muted);
       font-size: 0.9375rem;
@@ -277,12 +278,11 @@
     /* Error banner — hidden unless .board.state-error */
     #board-error {
       display: none;
+      flex: 0 0 100%;
       flex-direction: column;
       align-items: center;
       gap: 12px;
-      width: 100%;
       padding: 24px;
-      margin-bottom: 20px;
       background: #ffebe6;
       border: 1px solid #ffbdad;
       border-radius: var(--radius-md);
@@ -339,18 +339,23 @@
       outline-offset: 2px;
     }
 
-    /* Drag-error toast */
+    /* Drag-error toast — floats above the board, doesn't shift layout */
     #drag-error {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
       display: none;
-      width: 100%;
-      padding: 10px 16px;
-      margin-bottom: 12px;
+      max-width: 480px;
+      padding: 10px 20px;
       background: #ffebe6;
       border: 1px solid #ffbdad;
       border-radius: var(--radius-sm);
       color: #bf2600;
       font-size: 0.8125rem;
       text-align: center;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(9, 30, 66, 0.15);
     }
 
     #drag-error.visible {

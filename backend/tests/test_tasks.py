@@ -127,11 +127,11 @@ def test_patch_invalid_transition_todo_to_done_returns_422(client, created_task)
     assert r.status_code == 422
 
 
-def test_patch_same_status_returns_422(client, created_task):
+def test_patch_same_status_is_noop_returns_200(client, created_task):
     task_id = created_task["id"]
-    # created_task defaults to "ToDo" — patching to the same status must fail.
+    # created_task defaults to "ToDo" — patching to the same status is a no-op.
     r = client.patch(f"/tasks/{task_id}", json={"status": "ToDo"})
-    assert r.status_code == 422
+    assert r.status_code == 200
 
 
 # ---------------------------------------------------------------------------

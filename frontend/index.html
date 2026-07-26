@@ -289,6 +289,26 @@
       background: var(--color-border);
     }
 
+    /* ── due date ─────────────────────────────────────────────────────── */
+    .due-date {
+      font-size: 0.75rem;
+      color: var(--color-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .due-date.overdue {
+      color: #ad281a;
+      font-weight: 650;
+    }
+
+    .due-date.overdue::before {
+      content: "⚠";
+      font-size: 0.75rem;
+    }
+
     /* ── edit button ────────────────────────────────────────────────── */
     .btn-edit {
       display: inline-flex;
@@ -778,6 +798,10 @@
           <label class="form-label" for="field-assignee">Assignee</label>
           <input class="form-input" id="field-assignee" type="text" placeholder="Assignee name (optional)">
         </div>
+        <div class="form-group">
+          <label class="form-label" for="field-due-date">Due Date</label>
+          <input class="form-input" id="field-due-date" type="date">
+        </div>
         <div class="modal-footer">
           <button type="button" class="btn-cancel" id="btn-modal-cancel">Cancel</button>
           <button type="submit" class="btn-save" id="btn-modal-save">Save</button>
@@ -818,6 +842,13 @@
       const div = document.createElement("div");
       div.textContent = String(text);
       return div.innerHTML;
+    }
+
+    /** Format an ISO date string (YYYY-MM-DD) into a short readable form. */
+    function formatDate(isoDate) {
+      if (!isoDate) return "";
+      const d = new Date(isoDate + "T00:00:00");
+      return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
     }
 
     /** Return a stable id-based comparator for tie-breaking. */
@@ -982,6 +1013,20 @@
         assignee.textContent = "Unassigned";
       }
 
+      // Due date
+      if (task.due_date) {
+        const dueEl = document.createElement("span");
+        dueEl.className = "due-date";
+        const dueDate = new Date(task.due_date + "T00:00:00");
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (dueDate < today && task.status !== "Done") {
+          dueEl.classList.add("overdue");
+        }
+        dueEl.textContent = formatDate(task.due_date);
+        metaLeft.appendChild(dueEl);
+      }
+
       // Edit button
       const editBtn = document.createElement("button");
       editBtn.className = "btn-edit";
@@ -1049,6 +1094,7 @@
       document.getElementById("field-status").value = "ToDo";
       document.getElementById("field-priority").value = "Medium";
       document.getElementById("field-assignee").value = "";
+      document.getElementById("field-due-date").value = "";
       clearModalErrors();
       document.getElementById("modal-overlay").classList.add("open");
       document.getElementById("field-title").focus();
@@ -1063,6 +1109,7 @@
       document.getElementById("field-status").value = task.status || "ToDo";
       document.getElementById("field-priority").value = task.priority || "Medium";
       document.getElementById("field-assignee").value = task.assignee || "";
+      document.getElementById("field-due-date").value = task.due_date || "";
       clearModalErrors();
       document.getElementById("modal-overlay").classList.add("open");
       document.getElementById("field-title").focus();
@@ -1089,6 +1136,7 @@
         status: document.getElementById("field-status").value,
         priority: document.getElementById("field-priority").value,
         assignee: document.getElementById("field-assignee").value.trim() || null,
+        due_date: document.getElementById("field-due-date").value || null,
       };
 
       const saveBtn = document.getElementById("btn-modal-save");

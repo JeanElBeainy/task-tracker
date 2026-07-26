@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Tracker — Kanban</title>
+  <style>
+    /* ------------------------------------------------------------------ */
+    /* RESET & BASE                                                        */
+    /* ------------------------------------------------------------------ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --color-bg:        #f4f5f7;
+      --color-surface:   #ffffff;
+      --color-border:    #dfe1e6;
+      --color-text:      #172b4d;
+      --color-muted:     #5e6c84;
+      --color-brand:     #0052cc;
+      --color-brand-dim: #deebff;
+
+      --priority-low:    #36b37e;
+      --priority-medium: #ffab00;
+      --priority-high:   #ff5630;
+
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --shadow-card: 0 1px 3px rgba(9,30,66,.12), 0 0 1px rgba(9,30,66,.08);
+      --shadow-card-hover: 0 4px 8px rgba(9,30,66,.15), 0 0 1px rgba(9,30,66,.15);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                   "Helvetica Neue", Arial, sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* HEADER                                                              */
+    /* ------------------------------------------------------------------ */
+    .page-header {
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: 20px 32px;
+    }
+
+    .page-header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .page-header .subtitle {
+      margin-top: 2px;
+      font-size: 0.875rem;
+      color: var(--color-muted);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* BOARD LAYOUT                                                        */
+    /* ------------------------------------------------------------------ */
+    .board {
+      flex: 1;
+      display: flex;
+      gap: 20px;
+      padding: 24px 32px;
+      overflow-x: auto;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* COLUMN                                                              */
+    /* ------------------------------------------------------------------ */
+    .column {
+      flex: 1 1 0;
+      min-width: 280px;
+      max-width: 360px;
+      background: var(--color-bg);
+      /* ^ matches the board background so the column itself is invisible */
+    }
+
+    .column-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding: 0 4px;
+    }
+
+    .column-header h2 {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-muted);
+    }
+
+    .column-header .count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--color-muted);
+      background: var(--color-border);
+      border-radius: 10px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* CARD LIST (future drop zone)                                        */
+    /* ------------------------------------------------------------------ */
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      /* When JS renders cards, it appends children here */
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* CARD                                                                */
+    /* ------------------------------------------------------------------ */
+    .card {
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-card);
+      padding: 14px 16px 12px;
+      cursor: default;
+      transition: box-shadow 0.15s ease;
+      /* data-status attribute available for filtering / styling */
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-card-hover);
+    }
+
+    .card-title {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      line-height: 1.4;
+      margin-bottom: 6px;
+      word-break: break-word;
+    }
+
+    .card-description {
+      font-size: 0.8125rem;
+      color: var(--color-muted);
+      line-height: 1.5;
+      margin-bottom: 10px;
+      /* Collapse when empty */
+    }
+
+    .card-description:empty {
+      display: none;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* CARD META ROW                                                       */
+    /* ------------------------------------------------------------------ */
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .meta-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Priority badge */
+    .priority {
+      display: inline-block;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      line-height: 1.4;
+    }
+
+    .priority-Low    { background: #e3fcef; color: #006644; }
+    .priority-Medium { background: #fffae6; color: #974f0c; }
+    .priority-High   { background: #ffebe6; color: #bf2600; }
+
+    /* Assignee */
+    .assignee {
+      font-size: 0.75rem;
+      color: var(--color-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .assignee::before {
+      content: "";
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--color-brand-dim);
+      flex-shrink: 0;
+    }
+
+    .assignee.unassigned::before {
+      background: var(--color-border);
+    }
+
+    /* Edit button */
+    .btn-edit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--color-muted);
+      cursor: pointer;
+      font-size: 0.8125rem;
+      transition: background 0.1s ease, color 0.1s ease;
+    }
+
+    .btn-edit:hover {
+      background: var(--color-brand-dim);
+      color: var(--color-brand);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================================================================= -->
+  <!-- HEADER                                                             -->
+  <!-- ================================================================= -->
+  <header class="page-header">
+    <h1>Task Tracker</h1>
+    <p class="subtitle">Manage your work with a simple Kanban board</p>
+  </header>
+
+  <!-- ================================================================= -->
+  <!-- BOARD                                                              -->
+  <!-- ================================================================= -->
+  <main class="board" id="board">
+
+    <!-- ──────────────── ToDo column ──────────────── -->
+    <section class="column" data-status="ToDo">
+      <div class="column-header">
+        <h2>To Do</h2>
+        <span class="count">1</span>
+      </div>
+      <div class="card-list" id="list-ToDo">
+        <!-- Sample card 1 -->
+        <article class="card" data-status="ToDo" data-priority="High">
+          <div class="card-title">Design landing page</div>
+          <div class="card-description">Create wireframes and high-fidelity mockups for the new homepage</div>
+          <div class="card-meta">
+            <div class="meta-left">
+              <span class="priority priority-High">High</span>
+              <span class="assignee">Alice</span>
+            </div>
+            <button class="btn-edit" aria-label="Edit task" title="Edit">✎</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ──────────────── InProgress column ──────────── -->
+    <section class="column" data-status="InProgress">
+      <div class="column-header">
+        <h2>In Progress</h2>
+        <span class="count">1</span>
+      </div>
+      <div class="card-list" id="list-InProgress">
+        <!-- Sample card 2 -->
+        <article class="card" data-status="InProgress" data-priority="Medium">
+          <div class="card-title">Implement authentication</div>
+          <div class="card-description">Add JWT-based login and registration endpoints</div>
+          <div class="card-meta">
+            <div class="meta-left">
+              <span class="priority priority-Medium">Medium</span>
+              <span class="assignee unassigned">Unassigned</span>
+            </div>
+            <button class="btn-edit" aria-label="Edit task" title="Edit">✎</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ──────────────── Done column ──────────────── -->
+    <section class="column" data-status="Done">
+      <div class="column-header">
+        <h2>Done</h2>
+        <span class="count">1</span>
+      </div>
+      <div class="card-list" id="list-Done">
+        <!-- Sample card 3 -->
+        <article class="card" data-status="Done" data-priority="Low">
+          <div class="card-title">Set up project repository</div>
+          <div class="card-description"></div>
+          <div class="card-meta">
+            <div class="meta-left">
+              <span class="priority priority-Low">Low</span>
+              <span class="assignee">Bob</span>
+            </div>
+            <button class="btn-edit" aria-label="Edit task" title="Edit">✎</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================================================================= -->
+  <!-- PLACEHOLDER SCRIPT (ready for future JS)                           -->
+  <!-- ================================================================= -->
+  <script>
+    /**
+     * Placeholder: when the API is wired up, renderTasks() will populate
+     * the three card-list containers from an array of task objects like:
+     *
+     *   { id, title, description, status, priority, assignee, created_at, updated_at }
+     *
+     * Column containers have id="list-{status}" (list-ToDo, list-InProgress, list-Done).
+     * Cards carry data-status and data-priority attributes for easy filtering.
+     */
+    console.log("Task Tracker Kanban ready — static sample loaded.");
+  </script>
+
+</body>
+</html>

@@ -238,6 +238,91 @@
       background: var(--color-brand-dim);
       color: var(--color-brand);
     }
+
+    /* ------------------------------------------------------------------ */
+    /* BOARD STATES (loading / ready / empty / error)                      */
+    /* ------------------------------------------------------------------ */
+
+    /* Loading indicator — hidden unless .board.state-loading */
+    #board-loading {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 48px 0;
+      color: var(--color-muted);
+      font-size: 0.9375rem;
+    }
+
+    .board.state-loading #board-loading {
+      display: flex;
+    }
+
+    #board-loading::before {
+      content: "";
+      width: 22px;
+      height: 22px;
+      border: 3px solid var(--color-border);
+      border-top-color: var(--color-brand);
+      border-radius: 50%;
+      animation: board-spin 0.8s linear infinite;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+
+    @keyframes board-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Error banner — hidden unless .board.state-error */
+    #board-error {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 24px;
+      margin-bottom: 20px;
+      background: #ffebe6;
+      border: 1px solid #ffbdad;
+      border-radius: var(--radius-md);
+      color: #bf2600;
+      font-size: 0.875rem;
+    }
+
+    .board.state-error #board-error {
+      display: flex;
+    }
+
+    #board-error .btn-retry {
+      padding: 6px 16px;
+      border: 1px solid #ffbdad;
+      border-radius: var(--radius-sm);
+      background: #fff;
+      color: #bf2600;
+      cursor: pointer;
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+
+    #board-error .btn-retry:hover {
+      background: #ffebe6;
+    }
+
+    /* Hide columns during loading */
+    .board.state-loading .column {
+      display: none;
+    }
+
+    /* Empty column placeholder (stays visible as future drop target) */
+    .empty-placeholder {
+      padding: 24px 16px;
+      text-align: center;
+      color: var(--color-muted);
+      font-size: 0.8125rem;
+      border: 2px dashed var(--color-border);
+      border-radius: var(--radius-md);
+    }
   </style>
 </head>
 <body>
@@ -254,6 +339,13 @@
   <!-- BOARD                                                              -->
   <!-- ================================================================= -->
   <main class="board" id="board">
+
+    <div id="board-loading">Loading tasks…</div>
+
+    <div id="board-error">
+      <span>Failed to load tasks. Check your connection and try again.</span>
+      <button id="btn-retry" class="btn-retry">Retry</button>
+    </div>
 
     <!-- ──────────────── ToDo column ──────────────── -->
     <section class="column" data-status="ToDo">
@@ -378,8 +470,16 @@
         // Clear existing content (e.g. placeholder or previous render)
         container.innerHTML = "";
 
-        for (const task of list) {
-          container.appendChild(buildCard(task));
+        if (list.length > 0) {
+          for (const task of list) {
+            container.appendChild(buildCard(task));
+          }
+        } else {
+          // Empty column — show placeholder (visible drop target)
+          const placeholder = document.createElement("div");
+          placeholder.className = "empty-placeholder";
+          placeholder.textContent = "No tasks";
+          container.appendChild(placeholder);
         }
 
         updateColumnCount(status, list.length);
@@ -461,15 +561,42 @@
     }
 
     /* ------------------------------------------------------------------ */
+    /* STATE MANAGEMENT                                                    */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Toggle CSS state classes on the board element.
+     * Valid states: "loading" | "ready" | "empty" | "error"
+     */
+    function setBoardState(state) {
+      const board = document.getElementById("board");
+      board.classList.remove("state-loading", "state-ready", "state-empty", "state-error");
+      board.classList.add(`state-${state}`);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* ORCHESTRATOR                                                        */
+    /* ------------------------------------------------------------------ */
+
+    async function loadTasks() {
+      setBoardState("loading");
+      try {
+        await fetchTasks();
+        renderBoard(tasks);
+        setBoardState(tasks.length === 0 ? "empty" : "ready");
+      } catch (err) {
+        console.error("Failed to load tasks:", err);
+        setBoardState("error");
+      }
+    }
+
+    /* ------------------------------------------------------------------ */
     /* BOOT                                                                */
     /* ------------------------------------------------------------------ */
 
-    fetchTasks()
-      .then(renderBoard)
-      .catch((err) => {
-        console.error("Failed to load tasks:", err);
-        // Columns remain empty — counts stay at 0 from the static markup
-      });
+    document.getElementById("btn-retry").addEventListener("click", loadTasks);
+
+    loadTasks();
   </script>
 
 </body>

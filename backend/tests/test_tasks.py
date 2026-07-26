@@ -192,3 +192,62 @@ def test_delete_existing_returns_204_no_body(client, created_task):
 def test_delete_missing_returns_404(client):
     r = client.delete("/tasks/nonexistent-id")
     assert r.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# POST /tasks — due_date
+# ---------------------------------------------------------------------------
+
+def test_create_task_with_valid_due_date_returns_201_with_date(client):
+    payload = {
+        "title": "Due date task",
+        "due_date": "2025-12-31",
+    }
+    r = client.post("/tasks", json=payload)
+    assert r.status_code == 201
+    body = r.json()
+    assert body["due_date"] == "2025-12-31"
+
+
+def test_create_task_with_invalid_due_date_format_returns_422(client):
+    payload = {
+        "title": "Bad date",
+        "due_date": "12/31/2025",
+    }
+    r = client.post("/tasks", json=payload)
+    assert r.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# GET /tasks — overdue filter
+# ---------------------------------------------------------------------------
+
+def test_list_tasks_overdue_includes_past_due_date_with_status_todo(client):
+    client.post("/tasks", json={
+        "title": "overdue task",
+        "due_date": "2020-01-01",
+        "status": "ToDo",
+    })
+    r = client.get("/tasks", params={"overdue": True})
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data) == 1
+    assert data[0]["title"] == "overdue task"
+    assert data[0]["due_date"] == "2020-01-01"
+
+
+def test_list_tasks_overdue_excludes_past_due_date_with_status_done(client):
+    client.post("/tasks", json={
+        "title": "finished late",
+        "due_date": "2020-01-01",
+        "status": "Done",
+    })
+    r = client.get("/tasks", params={"overdue": True})
+    assert r.status_code == 200
+    assert r.json() == []
+
+
+def test_list_tasks_overdue_with_no_matches_returns_200_and_empty_list(client):
+    r = client.get("/tasks", params={"overdue": True})
+    assert r.status_code == 200
+    assert r.json() == []

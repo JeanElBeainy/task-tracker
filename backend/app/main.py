@@ -72,6 +72,11 @@ def get_task_activity(task_id: str) -> list[ActivityEvent]:
     return storage.get_activity(task_id)
 
 
+@app.get("/activity", response_model=list[ActivityEvent], tags=["tasks"])
+def get_global_activity() -> list[ActivityEvent]:
+    return storage.get_all_activity()
+
+
 @app.patch("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])
 def update_task(task_id: str, payload: TaskUpdate) -> TaskResponse:
     existing = storage.get_task_by_id(task_id)

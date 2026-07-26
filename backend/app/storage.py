@@ -72,6 +72,14 @@ def get_activity(task_id: str) -> list[ActivityEvent]:
     return _activities.get(task_id, [])
 
 
+def get_all_activity() -> list[ActivityEvent]:
+    all_events: list[ActivityEvent] = []
+    for events in _activities.values():
+        all_events.extend(events)
+    all_events.sort(key=lambda e: e.timestamp, reverse=True)
+    return all_events
+
+
 def delete_task(task_id: str) -> bool:
     if task_id in _tasks:
         del _tasks[task_id]

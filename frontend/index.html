@@ -299,14 +299,17 @@
       white-space: nowrap;
     }
 
-    .due-date.overdue {
-      color: #ad281a;
+    .overdue-pill {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.6875rem;
       font-weight: 650;
-    }
-
-    .due-date.overdue::before {
-      content: "⚠";
-      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #fdecea;
+      color: #ad281a;
     }
 
     /* ── edit button ────────────────────────────────────────────────── */
@@ -481,6 +484,33 @@
     .btn-new-task:active {
       transform: translateY(0);
       box-shadow: 0 1px 4px rgba(91,91,214,.2);
+    }
+
+    .btn-filter-overdue {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 999px;
+      background: var(--color-surface);
+      color: var(--color-muted);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+      letter-spacing: -0.01em;
+    }
+
+    .btn-filter-overdue:hover {
+      border-color: #e8a59e;
+      color: #ad281a;
+    }
+
+    .btn-filter-overdue.active {
+      background: #fdecea;
+      border-color: #f5c6c2;
+      color: #ad281a;
     }
 
     /* ------------------------------------------------------------------ */
@@ -712,6 +742,7 @@
     <h1>Task Tracker</h1>
     <p class="subtitle">Manage your work with a simple Kanban board</p>
     <button id="btn-new-task" class="btn-new-task">+ New Task</button>
+    <button id="btn-filter-overdue" class="btn-filter-overdue">Overdue</button>
   </header>
 
   <!-- ================================================================= -->
@@ -824,6 +855,7 @@
     /* ------------------------------------------------------------------ */
     let tasks = [];
     let editingTaskId = null;   // null = create mode; set = edit mode
+    let overdueFilterActive = false;
 
     /* ------------------------------------------------------------------ */
     /* HELPERS                                                             */
@@ -848,7 +880,7 @@
     function formatDate(isoDate) {
       if (!isoDate) return "";
       const d = new Date(isoDate + "T00:00:00");
-      return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     }
 
     /** Return a stable id-based comparator for tie-breaking. */
@@ -862,8 +894,10 @@
     /* FETCH                                                               */
     /* ------------------------------------------------------------------ */
 
-    async function fetchTasks() {
-      const response = await fetch(`${API_BASE}/tasks`);
+    async function fetchTasks(params = {}) {
+      const url = new URL(`${API_BASE}/tasks`);
+      if (params.overdue) url.searchParams.set("overdue", "true");
+      const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error(`Fetch failed: ${response.status} ${response.statusText}`);
       }
@@ -1015,14 +1049,17 @@
 
       // Due date
       if (task.due_date) {
-        const dueEl = document.createElement("span");
-        dueEl.className = "due-date";
         const dueDate = new Date(task.due_date + "T00:00:00");
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (dueDate < today && task.status !== "Done") {
-          dueEl.classList.add("overdue");
+          const overduePill = document.createElement("span");
+          overduePill.className = "overdue-pill";
+          overduePill.textContent = "Overdue";
+          metaLeft.appendChild(overduePill);
         }
+        const dueEl = document.createElement("span");
+        dueEl.className = "due-date";
         dueEl.textContent = formatDate(task.due_date);
         metaLeft.appendChild(dueEl);
       }
@@ -1330,7 +1367,9 @@
     async function loadTasks() {
       setBoardState("loading");
       try {
-        await fetchTasks();
+        const params = {};
+        if (overdueFilterActive) params.overdue = true;
+        await fetchTasks(params);
         renderBoard(tasks);
         setBoardState(tasks.length === 0 ? "empty" : "ready");
       } catch (err) {
@@ -1347,6 +1386,13 @@
 
     // New Task button
     document.getElementById("btn-new-task").addEventListener("click", openCreateModal);
+
+    // Overdue filter toggle
+    document.getElementById("btn-filter-overdue").addEventListener("click", function () {
+      overdueFilterActive = !overdueFilterActive;
+      this.classList.toggle("active", overdueFilterActive);
+      loadTasks();
+    });
 
     // Modal dismissals
     document.getElementById("btn-modal-close").addEventListener("click", closeModal);

@@ -2,9 +2,10 @@ import uuid
 from datetime import date, datetime, timezone
 from typing import Optional
 
-from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
+from app.models import ActivityEvent, TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
 
 _tasks: dict[str, TaskResponse] = {}
+_activities: dict[str, list[ActivityEvent]] = {}
 
 
 def add_task(payload: TaskCreate) -> TaskResponse:
@@ -63,12 +64,22 @@ def update_task(task_id: str, payload: TaskUpdate) -> Optional[TaskResponse]:
     return updated
 
 
+def add_activity_event(task_id: str, event: ActivityEvent) -> None:
+    _activities.setdefault(task_id, []).append(event)
+
+
+def get_activity(task_id: str) -> list[ActivityEvent]:
+    return _activities.get(task_id, [])
+
+
 def delete_task(task_id: str) -> bool:
     if task_id in _tasks:
         del _tasks[task_id]
+        _activities.pop(task_id, None)
         return True
     return False
 
 
 def _reset() -> None:
     _tasks.clear()
+    _activities.clear()

@@ -361,6 +361,209 @@
     #drag-error.visible {
       display: block;
     }
+
+    /* ------------------------------------------------------------------ */
+    /* NEW TASK BUTTON                                                      */
+    /* ------------------------------------------------------------------ */
+    .btn-new-task {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: var(--color-brand);
+      color: #fff;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      margin-top: 10px;
+    }
+
+    .btn-new-task:hover {
+      background: #0047b3;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* MODAL                                                                */
+    /* ------------------------------------------------------------------ */
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(9, 30, 66, 0.5);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      box-shadow: 0 8px 24px rgba(9, 30, 66, 0.25);
+      width: 90%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .btn-close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--color-muted);
+      cursor: pointer;
+      font-size: 1.125rem;
+      transition: background 0.1s ease, color 0.1s ease;
+    }
+
+    .btn-close:hover {
+      background: var(--color-brand-dim);
+      color: var(--color-text);
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--color-muted);
+      margin-bottom: 4px;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-family: inherit;
+      color: var(--color-text);
+      background: var(--color-surface);
+      transition: border-color 0.15s ease;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--color-brand);
+      box-shadow: 0 0 0 2px var(--color-brand-dim);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-input.input-error,
+    .form-textarea.input-error {
+      border-color: #ff5630;
+    }
+
+    .form-input.input-error:focus,
+    .form-textarea.input-error:focus {
+      box-shadow: 0 0 0 2px #ffebe6;
+    }
+
+    .form-error-text {
+      display: none;
+      margin-top: 4px;
+      font-size: 0.75rem;
+      color: #bf2600;
+    }
+
+    .form-error-text.visible {
+      display: block;
+    }
+
+    /* Modal server error banner */
+    .modal-server-error {
+      display: none;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      background: #ffebe6;
+      border: 1px solid #ffbdad;
+      border-radius: var(--radius-sm);
+      color: #bf2600;
+      font-size: 0.8125rem;
+    }
+
+    .modal-server-error.visible {
+      display: block;
+    }
+
+    /* Footer */
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-cancel,
+    .btn-save {
+      padding: 8px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.1s ease, opacity 0.1s ease;
+      border: none;
+    }
+
+    .btn-cancel {
+      background: var(--color-border);
+      color: var(--color-text);
+    }
+
+    .btn-cancel:hover {
+      background: #c1c7d0;
+    }
+
+    .btn-save {
+      background: var(--color-brand);
+      color: #fff;
+    }
+
+    .btn-save:hover {
+      background: #0047b3;
+    }
+
+    .btn-save:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -371,6 +574,7 @@
   <header class="page-header">
     <h1>Task Tracker</h1>
     <p class="subtitle">Manage your work with a simple Kanban board</p>
+    <button id="btn-new-task" class="btn-new-task">+ New Task</button>
   </header>
 
   <!-- ================================================================= -->
@@ -417,6 +621,55 @@
   </main>
 
   <!-- ================================================================= -->
+  <!-- MODAL                                                               -->
+  <!-- ================================================================= -->
+  <div id="modal-overlay">
+    <div class="modal" id="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
+      <div class="modal-header">
+        <h2 id="modal-heading">New Task</h2>
+        <button class="btn-close" id="btn-modal-close" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-server-error" id="modal-server-error"></div>
+      <form class="modal-form" id="modal-form" novalidate>
+        <input type="hidden" id="field-task-id" value="">
+        <div class="form-group">
+          <label class="form-label" for="field-title">Title</label>
+          <input class="form-input" id="field-title" type="text" required maxlength="200" placeholder="Task title">
+          <span class="form-error-text" id="error-title">Title is required</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="field-description">Description</label>
+          <textarea class="form-textarea" id="field-description" rows="3" placeholder="Optional description"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="field-status">Status</label>
+          <select class="form-select" id="field-status">
+            <option value="ToDo">To Do</option>
+            <option value="InProgress">In Progress</option>
+            <option value="Done">Done</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="field-priority">Priority</label>
+          <select class="form-select" id="field-priority">
+            <option value="Low">Low</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="High">High</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="field-assignee">Assignee</label>
+          <input class="form-input" id="field-assignee" type="text" placeholder="Assignee name (optional)">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" id="btn-modal-cancel">Cancel</button>
+          <button type="submit" class="btn-save" id="btn-modal-save">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
   <!-- PLACEHOLDER SCRIPT (ready for future JS)                           -->
   <!-- ================================================================= -->
   <script>
@@ -429,6 +682,7 @@
     /* STATE                                                               */
     /* ------------------------------------------------------------------ */
     let tasks = [];
+    let editingTaskId = null;   // null = create mode; set = edit mode
 
     /* ------------------------------------------------------------------ */
     /* HELPERS                                                             */
@@ -468,6 +722,43 @@
       const data = await response.json();
       tasks = Array.isArray(data) ? data : [];
       return tasks;
+    }
+
+    async function createTask(payload) {
+      const response = await fetch(`${API_BASE}/tasks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        let serverMsg = `Server returned ${response.status}`;
+        try {
+          const body = await response.json();
+          if (body.detail) serverMsg = body.detail;
+        } catch (_) { /* use default */ }
+        throw new Error(serverMsg);
+      }
+    }
+
+    async function patchTask(taskId, payload) {
+      const response = await fetch(
+        `${API_BASE}/tasks/${encodeURIComponent(taskId)}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        let serverMsg = `Server returned ${response.status}`;
+        try {
+          const body = await response.json();
+          if (body.detail) serverMsg = body.detail;
+        } catch (_) { /* use default */ }
+        throw new Error(serverMsg);
+      }
     }
 
     /* ------------------------------------------------------------------ */
@@ -574,12 +865,16 @@
         assignee.textContent = "Unassigned";
       }
 
-      // Edit button (non-functional for now)
+      // Edit button
       const editBtn = document.createElement("button");
       editBtn.className = "btn-edit";
       editBtn.setAttribute("aria-label", "Edit task");
       editBtn.title = "Edit";
       editBtn.textContent = "✎";
+      editBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openEditModal(task);
+      });
 
       // Assemble
       metaLeft.appendChild(badge);
@@ -603,6 +898,100 @@
       if (!column) return;
       const countEl = column.querySelector(".count");
       if (countEl) countEl.textContent = String(count);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* MODAL                                                               */
+    /* ------------------------------------------------------------------ */
+
+    function clearModalErrors() {
+      document.getElementById("field-title").classList.remove("input-error");
+      document.getElementById("error-title").classList.remove("visible");
+      const banner = document.getElementById("modal-server-error");
+      banner.classList.remove("visible");
+      banner.textContent = "";
+    }
+
+    function showFieldError(fieldId, errorId) {
+      document.getElementById(fieldId).classList.add("input-error");
+      document.getElementById(errorId).classList.add("visible");
+    }
+
+    function showServerError(message) {
+      const banner = document.getElementById("modal-server-error");
+      banner.textContent = message;
+      banner.classList.add("visible");
+    }
+
+    function openCreateModal() {
+      editingTaskId = null;
+      document.getElementById("modal-heading").textContent = "New Task";
+      document.getElementById("field-task-id").value = "";
+      document.getElementById("field-title").value = "";
+      document.getElementById("field-description").value = "";
+      document.getElementById("field-status").value = "ToDo";
+      document.getElementById("field-priority").value = "Medium";
+      document.getElementById("field-assignee").value = "";
+      clearModalErrors();
+      document.getElementById("modal-overlay").classList.add("open");
+      document.getElementById("field-title").focus();
+    }
+
+    function openEditModal(task) {
+      editingTaskId = task.id;
+      document.getElementById("modal-heading").textContent = "Edit Task";
+      document.getElementById("field-task-id").value = task.id || "";
+      document.getElementById("field-title").value = task.title || "";
+      document.getElementById("field-description").value = task.description || "";
+      document.getElementById("field-status").value = task.status || "ToDo";
+      document.getElementById("field-priority").value = task.priority || "Medium";
+      document.getElementById("field-assignee").value = task.assignee || "";
+      clearModalErrors();
+      document.getElementById("modal-overlay").classList.add("open");
+      document.getElementById("field-title").focus();
+    }
+
+    function closeModal() {
+      document.getElementById("modal-overlay").classList.remove("open");
+      clearModalErrors();
+    }
+
+    async function handleModalSubmit(e) {
+      e.preventDefault();
+      clearModalErrors();
+
+      const title = document.getElementById("field-title").value.trim();
+      if (!title) {
+        showFieldError("field-title", "error-title");
+        return;
+      }
+
+      const payload = {
+        title: title,
+        description: document.getElementById("field-description").value,
+        status: document.getElementById("field-status").value,
+        priority: document.getElementById("field-priority").value,
+        assignee: document.getElementById("field-assignee").value.trim() || null,
+      };
+
+      const saveBtn = document.getElementById("btn-modal-save");
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving…";
+
+      try {
+        if (editingTaskId) {
+          await patchTask(editingTaskId, payload);
+        } else {
+          await createTask(payload);
+        }
+        closeModal();
+        await loadTasks();
+      } catch (err) {
+        showServerError(err.message);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save";
+      }
     }
 
     /* ------------------------------------------------------------------ */
@@ -790,6 +1179,30 @@
     /* ------------------------------------------------------------------ */
 
     document.getElementById("btn-retry").addEventListener("click", loadTasks);
+
+    // New Task button
+    document.getElementById("btn-new-task").addEventListener("click", openCreateModal);
+
+    // Modal dismissals
+    document.getElementById("btn-modal-close").addEventListener("click", closeModal);
+    document.getElementById("btn-modal-cancel").addEventListener("click", closeModal);
+    document.getElementById("modal-overlay").addEventListener("click", function (e) {
+      if (e.target === this) closeModal();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && document.getElementById("modal-overlay").classList.contains("open")) {
+        closeModal();
+      }
+    });
+
+    // Form submit
+    document.getElementById("modal-form").addEventListener("submit", handleModalSubmit);
+
+    // Clear title error on input
+    document.getElementById("field-title").addEventListener("input", function () {
+      this.classList.remove("input-error");
+      document.getElementById("error-title").classList.remove("visible");
+    });
 
     setupDropZones();
     loadTasks();

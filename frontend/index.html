@@ -259,66 +259,27 @@
     <section class="column" data-status="ToDo">
       <div class="column-header">
         <h2>To Do</h2>
-        <span class="count">1</span>
+        <span class="count">0</span>
       </div>
-      <div class="card-list" id="list-ToDo">
-        <!-- Sample card 1 -->
-        <article class="card" data-status="ToDo" data-priority="High">
-          <div class="card-title">Design landing page</div>
-          <div class="card-description">Create wireframes and high-fidelity mockups for the new homepage</div>
-          <div class="card-meta">
-            <div class="meta-left">
-              <span class="priority priority-High">High</span>
-              <span class="assignee">Alice</span>
-            </div>
-            <button class="btn-edit" aria-label="Edit task" title="Edit">✎</button>
-          </div>
-        </article>
-      </div>
+      <div class="card-list" id="list-ToDo"></div>
     </section>
 
     <!-- ──────────────── InProgress column ──────────── -->
     <section class="column" data-status="InProgress">
       <div class="column-header">
         <h2>In Progress</h2>
-        <span class="count">1</span>
+        <span class="count">0</span>
       </div>
-      <div class="card-list" id="list-InProgress">
-        <!-- Sample card 2 -->
-        <article class="card" data-status="InProgress" data-priority="Medium">
-          <div class="card-title">Implement authentication</div>
-          <div class="card-description">Add JWT-based login and registration endpoints</div>
-          <div class="card-meta">
-            <div class="meta-left">
-              <span class="priority priority-Medium">Medium</span>
-              <span class="assignee unassigned">Unassigned</span>
-            </div>
-            <button class="btn-edit" aria-label="Edit task" title="Edit">✎</button>
-          </div>
-        </article>
-      </div>
+      <div class="card-list" id="list-InProgress"></div>
     </section>
 
     <!-- ──────────────── Done column ──────────────── -->
     <section class="column" data-status="Done">
       <div class="column-header">
         <h2>Done</h2>
-        <span class="count">1</span>
+        <span class="count">0</span>
       </div>
-      <div class="card-list" id="list-Done">
-        <!-- Sample card 3 -->
-        <article class="card" data-status="Done" data-priority="Low">
-          <div class="card-title">Set up project repository</div>
-          <div class="card-description"></div>
-          <div class="card-meta">
-            <div class="meta-left">
-              <span class="priority priority-Low">Low</span>
-              <span class="assignee">Bob</span>
-            </div>
-            <button class="btn-edit" aria-label="Edit task" title="Edit">✎</button>
-          </div>
-        </article>
-      </div>
+      <div class="card-list" id="list-Done"></div>
     </section>
 
   </main>
@@ -327,16 +288,188 @@
   <!-- PLACEHOLDER SCRIPT (ready for future JS)                           -->
   <!-- ================================================================= -->
   <script>
+    /* ------------------------------------------------------------------ */
+    /* API                                                                 */
+    /* ------------------------------------------------------------------ */
+    const API_BASE = "http://localhost:8000";
+
+    /* ------------------------------------------------------------------ */
+    /* STATE                                                               */
+    /* ------------------------------------------------------------------ */
+    let tasks = [];
+
+    /* ------------------------------------------------------------------ */
+    /* HELPERS                                                             */
+    /* ------------------------------------------------------------------ */
+
+    /** Priority sort weight: High=3, Medium=2, Low=1 */
+    const PRIORITY_ORDER = { High: 3, Medium: 2, Low: 1 };
+
     /**
-     * Placeholder: when the API is wired up, renderTasks() will populate
-     * the three card-list containers from an array of task objects like:
-     *
-     *   { id, title, description, status, priority, assignee, created_at, updated_at }
-     *
-     * Column containers have id="list-{status}" (list-ToDo, list-InProgress, list-Done).
-     * Cards carry data-status and data-priority attributes for easy filtering.
+     * Escape untrusted text before inserting into the DOM.
+     * Sets textContent on a detached element and reads innerHTML —
+     * the browser handles all necessary escaping.
      */
-    console.log("Task Tracker Kanban ready — static sample loaded.");
+    function escapeHtml(text) {
+      if (!text && text !== 0) return "";
+      const div = document.createElement("div");
+      div.textContent = String(text);
+      return div.innerHTML;
+    }
+
+    /** Return a stable id-based comparator for tie-breaking. */
+    function compareById(a, b) {
+      const idA = a.id || "";
+      const idB = b.id || "";
+      return idA.localeCompare(idB);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* FETCH                                                               */
+    /* ------------------------------------------------------------------ */
+
+    async function fetchTasks() {
+      const response = await fetch(`${API_BASE}/tasks`);
+      if (!response.ok) {
+        throw new Error(`Fetch failed: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
+      tasks = Array.isArray(data) ? data : [];
+      return tasks;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* RENDER                                                              */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Group `taskList` by status, sort each group (High → Medium → Low,
+     * then by id ascending), and populate the three column containers.
+     * Empty columns stay visible with a count of 0.
+     */
+    function renderBoard(taskList) {
+      /** Map status → card-list container */
+      const columns = {
+        ToDo:       document.getElementById("list-ToDo"),
+        InProgress: document.getElementById("list-InProgress"),
+        Done:       document.getElementById("list-Done"),
+      };
+
+      // Group
+      const grouped = { ToDo: [], InProgress: [], Done: [] };
+      for (const task of taskList) {
+        if (grouped.hasOwnProperty(task.status)) {
+          grouped[task.status].push(task);
+        }
+      }
+
+      // Sort & render each column
+      for (const [status, list] of Object.entries(grouped)) {
+        list.sort((a, b) => {
+          const pa = PRIORITY_ORDER[a.priority] || 0;
+          const pb = PRIORITY_ORDER[b.priority] || 0;
+          if (pa !== pb) return pb - pa;          // descending priority
+          return compareById(a, b);               // ascending id
+        });
+
+        const container = columns[status];
+        if (!container) continue;
+
+        // Clear existing content (e.g. placeholder or previous render)
+        container.innerHTML = "";
+
+        for (const task of list) {
+          container.appendChild(buildCard(task));
+        }
+
+        updateColumnCount(status, list.length);
+      }
+    }
+
+    /**
+     * Build a single card <article> element from a task object.
+     * Text values go through escapeHtml before being set via innerHTML
+     * (title, description) or remain safe via textContent (badges).
+     */
+    function buildCard(task) {
+      const card = document.createElement("article");
+      card.className = "card";
+      card.setAttribute("data-status", task.status);
+      card.setAttribute("data-priority", task.priority);
+
+      // Title
+      const title = document.createElement("div");
+      title.className = "card-title";
+      title.textContent = task.title;             // textContent = auto-escaped
+
+      // Description (optional — collapses via CSS :empty when blank)
+      const desc = document.createElement("div");
+      desc.className = "card-description";
+      if (task.description) {
+        desc.textContent = task.description;
+      }
+      // (if description is "" or nullish we leave it empty so :empty hides it)
+
+      // Meta row
+      const meta = document.createElement("div");
+      meta.className = "card-meta";
+
+      const metaLeft = document.createElement("div");
+      metaLeft.className = "meta-left";
+
+      // Priority badge
+      const badge = document.createElement("span");
+      badge.className = `priority priority-${escapeHtml(task.priority)}`;
+      badge.textContent = task.priority;
+
+      // Assignee
+      const assignee = document.createElement("span");
+      assignee.className = "assignee";
+      if (task.assignee) {
+        assignee.textContent = task.assignee;
+      } else {
+        assignee.classList.add("unassigned");
+        assignee.textContent = "Unassigned";
+      }
+
+      // Edit button (non-functional for now)
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn-edit";
+      editBtn.setAttribute("aria-label", "Edit task");
+      editBtn.title = "Edit";
+      editBtn.textContent = "✎";
+
+      // Assemble
+      metaLeft.appendChild(badge);
+      metaLeft.appendChild(assignee);
+      meta.appendChild(metaLeft);
+      meta.appendChild(editBtn);
+
+      card.appendChild(title);
+      card.appendChild(desc);
+      card.appendChild(meta);
+
+      return card;
+    }
+
+    /** Update the count badge inside a column's header. */
+    function updateColumnCount(status, count) {
+      const column = document.querySelector(`.column[data-status="${escapeHtml(status)}"]`);
+      if (!column) return;
+      const countEl = column.querySelector(".count");
+      if (countEl) countEl.textContent = String(count);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* BOOT                                                                */
+    /* ------------------------------------------------------------------ */
+
+    fetchTasks()
+      .then(renderBoard)
+      .catch((err) => {
+        console.error("Failed to load tasks:", err);
+        // Columns remain empty — counts stay at 0 from the static markup
+      });
   </script>
 
 </body>

@@ -29,9 +29,6 @@ def validate_status_transition(current: TaskStatus, new: TaskStatus) -> None:
         HTTPException: 422 with a list of valid transitions when the
             requested transition is forbidden.
     """
-    # [VERIFY] The comment below says "Same -> same is invalid" but
-    # VALID_TRANSITIONS includes same→same pairs — same-status updates
-    # are actually permitted by the code. Verify which behavior is intended.
     if (current, new) not in VALID_TRANSITIONS:
         allowed = sorted({f"{f.value}->{t.value}" for f, t in VALID_TRANSITIONS})
         raise HTTPException(

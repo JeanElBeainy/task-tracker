@@ -154,7 +154,9 @@ workflow is added, it should:
 │   ├── .dockerignore
 │   ├── requirements.txt
 │   ├── .env.example
-│   └── .gitignore
+│   ├── .gitignore
+│   └── scripts/
+│       └── verify_a.py          # Manual Pydantic validation spot-check
 └── frontend/
     └── index.html               # Kanban board SPA
 ```

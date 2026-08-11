@@ -13,7 +13,7 @@ load_dotenv()
 
 app = FastAPI(
     title="Task Tracker API",
-    description="Module 1 Task Tracker REST API",
+    description="Module 4 Task Tracker REST API",
     version="0.1.0",
 )
 

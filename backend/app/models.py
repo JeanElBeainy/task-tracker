@@ -6,21 +6,33 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class TaskStatus(str, Enum):
+    """Workflow states a task can occupy.
+
+    Values are serialized as their enum member names (e.g. "ToDo").
+    """
+
     TODO = "ToDo"
     IN_PROGRESS = "InProgress"
     DONE = "Done"
 
 
 class TaskPriority(str, Enum):
+    """Priority levels for triage and ordering.
+
+    Values are serialized as their enum member names (e.g. "High").
+    """
+
     LOW = "Low"
     MEDIUM = "Medium"
     HIGH = "High"
 
 
 class TaskCreate(BaseModel):
+    """Payload accepted by POST /tasks."""
+
     model_config = ConfigDict(extra="forbid")
 
-    title: str
+    title: str  # validated by validate_title
     description: Optional[str] = ""
     status: TaskStatus = TaskStatus.TODO
     priority: TaskPriority = TaskPriority.MEDIUM
@@ -30,6 +42,14 @@ class TaskCreate(BaseModel):
     @field_validator("title")
     @classmethod
     def validate_title(cls, v: str) -> str:
+        """Strip and validate the task title.
+
+        Args:
+            v: Raw title string from the request body.
+
+        Returns:
+            The stripped title if valid.
+        """
         v = v.strip()
         if not v:
             raise ValueError("title must not be blank")
@@ -39,6 +59,8 @@ class TaskCreate(BaseModel):
 
 
 class TaskUpdate(BaseModel):
+    """Payload accepted by PATCH /tasks/{task_id}. Every field is optional."""
+
     model_config = ConfigDict(extra="forbid")
 
     title: Optional[str] = None
@@ -51,6 +73,14 @@ class TaskUpdate(BaseModel):
     @field_validator("title")
     @classmethod
     def validate_title(cls, v: Optional[str]) -> Optional[str]:
+        """Strip and validate the task title when provided.
+
+        Args:
+            v: Raw title string from the request body, or None if omitted.
+
+        Returns:
+            The stripped title if provided and valid, None otherwise.
+        """
         if v is not None:
             v = v.strip()
             if not v:
@@ -61,6 +91,8 @@ class TaskUpdate(BaseModel):
 
 
 class TaskResponse(BaseModel):
+    """Schema returned by all task endpoints."""
+
     model_config = ConfigDict(extra="forbid")
 
     id: str

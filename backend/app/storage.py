@@ -9,6 +9,14 @@ _activities: dict[str, list[ActivityEvent]] = {}
 
 
 def add_task(payload: TaskCreate) -> TaskResponse:
+    """Persist a new task and return its full representation.
+
+    Args:
+        payload: Validated creation payload with title, status, priority, etc.
+
+    Returns:
+        The newly created TaskResponse including generated id and timestamps.
+    """
     now = datetime.now(timezone.utc)
     task = TaskResponse(
         id=str(uuid.uuid4()),
@@ -30,6 +38,17 @@ def get_all_tasks(
     priority: Optional[TaskPriority] = None,
     overdue: Optional[bool] = None,
 ) -> list[TaskResponse]:
+    """Return every stored task, optionally filtered.
+
+    Args:
+        status: If provided, keep only tasks with this status.
+        priority: If provided, keep only tasks with this priority.
+
+    Returns:
+        A list of TaskResponse objects. When both filters are supplied
+        they AND together (a task must match both to be included).
+        When neither filter is supplied every task is returned.
+    """
     results = list(_tasks.values())
     if status is not None:
         results = [t for t in results if t.status == status]
@@ -48,10 +67,31 @@ def get_all_tasks(
 
 
 def get_task_by_id(task_id: str) -> Optional[TaskResponse]:
+    """Look up a single task by its UUID string.
+
+    Args:
+        task_id: The UUID string assigned at creation time.
+
+    Returns:
+        The matching TaskResponse, or None if no task has that id.
+    """
     return _tasks.get(task_id)
 
 
 def update_task(task_id: str, payload: TaskUpdate) -> Optional[TaskResponse]:
+    """Partially update an existing task.
+
+    Only fields present in *payload* (explicitly set by the caller) are
+    applied; omitted fields keep their current values. The ``updated_at``
+    timestamp is refreshed automatically on every change.
+
+    Args:
+        task_id: UUID string of the task to update.
+        payload: Partial update with zero or more fields set.
+
+    Returns:
+        The updated TaskResponse, or None if the task_id is unknown.
+    """
     task = _tasks.get(task_id)
     if task is None:
         return None
@@ -81,6 +121,14 @@ def get_all_activity() -> list[ActivityEvent]:
 
 
 def delete_task(task_id: str) -> bool:
+    """Remove a task from the in-memory store.
+
+    Args:
+        task_id: UUID string of the task to delete.
+
+    Returns:
+        True if the task existed and was removed, False otherwise.
+    """
     if task_id in _tasks:
         del _tasks[task_id]
         _activities.pop(task_id, None)
@@ -89,5 +137,6 @@ def delete_task(task_id: str) -> bool:
 
 
 def _reset() -> None:
+    """Clear all tasks. Intended for test teardown only."""
     _tasks.clear()
     _activities.clear()

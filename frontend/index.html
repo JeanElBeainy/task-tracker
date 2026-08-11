@@ -289,6 +289,29 @@
       background: var(--color-border);
     }
 
+    /* ── due date ─────────────────────────────────────────────────────── */
+    .due-date {
+      font-size: 0.75rem;
+      color: var(--color-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .overdue-pill {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.6875rem;
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #fdecea;
+      color: #ad281a;
+    }
+
     /* ── edit button ────────────────────────────────────────────────── */
     .btn-edit {
       display: inline-flex;
@@ -461,6 +484,96 @@
     .btn-new-task:active {
       transform: translateY(0);
       box-shadow: 0 1px 4px rgba(91,91,214,.2);
+    }
+
+    .btn-filter-overdue {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 999px;
+      background: var(--color-surface);
+      color: var(--color-muted);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+      letter-spacing: -0.01em;
+    }
+
+    .btn-filter-overdue:hover {
+      border-color: #e8a59e;
+      color: #ad281a;
+    }
+
+    .btn-filter-overdue.active {
+      background: #fdecea;
+      border-color: #f5c6c2;
+      color: #ad281a;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* ACTIVITY PANEL (global feed)                                        */
+    /* ------------------------------------------------------------------ */
+    .activity-panel {
+      flex: 0 0 300px;
+      max-width: 300px;
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xs);
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 140px);
+      overflow: hidden;
+    }
+
+    .activity-panel-header {
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid var(--color-border);
+      flex-shrink: 0;
+    }
+
+    .activity-panel-header h2 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-muted);
+    }
+
+    .activity-panel-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .activity-panel-item {
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .activity-panel-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .activity-item-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .activity-task-title {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 2px;
+      word-break: break-word;
     }
 
     /* ------------------------------------------------------------------ */
@@ -675,6 +788,74 @@
     }
 
     /* ------------------------------------------------------------------ */
+    /* ACTIVITY SECTION (inside modal)                                      */
+    /* ------------------------------------------------------------------ */
+    #activity-section {
+      display: none;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--color-border);
+    }
+
+    #activity-section.visible { display: block; }
+
+    .activity-heading {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-muted);
+      margin-bottom: 12px;
+    }
+
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8125rem;
+      color: var(--color-text);
+    }
+
+    .activity-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.6875rem;
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 2px 8px;
+      border-radius: 999px;
+      line-height: 1.4;
+      flex-shrink: 0;
+    }
+
+    .activity-badge.created        { background: #e6f7ee; color: #1a6b44; }
+    .activity-badge.status-change  { background: var(--color-brand-dim); color: var(--color-brand); }
+
+    .activity-timestamp {
+      font-size: 0.75rem;
+      color: var(--color-muted);
+      flex-shrink: 0;
+    }
+
+    .activity-detail {
+      font-size: 0.8125rem;
+      color: var(--color-muted);
+    }
+
+    .activity-empty {
+      font-size: 0.8125rem;
+      color: var(--color-muted);
+      font-style: italic;
+    }
+
+    /* ------------------------------------------------------------------ */
     /* SCROLLBAR (WebKit)                                                  */
     /* ------------------------------------------------------------------ */
     .board::-webkit-scrollbar             { height: 6px; }
@@ -692,6 +873,7 @@
     <h1>Task Tracker</h1>
     <p class="subtitle">Manage your work with a simple Kanban board</p>
     <button id="btn-new-task" class="btn-new-task">+ New Task</button>
+    <button id="btn-filter-overdue" class="btn-filter-overdue">Overdue</button>
   </header>
 
   <!-- ================================================================= -->
@@ -734,6 +916,14 @@
       </div>
       <div class="card-list" id="list-Done"></div>
     </section>
+
+    <!-- ──────────────── Activity panel ──────────────── -->
+    <aside class="activity-panel" id="activity-panel">
+      <div class="activity-panel-header">
+        <h2>Recent Activity</h2>
+      </div>
+      <div class="activity-panel-list" id="activity-panel-list"></div>
+    </aside>
 
   </main>
 
@@ -778,11 +968,19 @@
           <label class="form-label" for="field-assignee">Assignee</label>
           <input class="form-input" id="field-assignee" type="text" placeholder="Assignee name (optional)">
         </div>
+        <div class="form-group">
+          <label class="form-label" for="field-due-date">Due Date</label>
+          <input class="form-input" id="field-due-date" type="date">
+        </div>
         <div class="modal-footer">
           <button type="button" class="btn-cancel" id="btn-modal-cancel">Cancel</button>
           <button type="submit" class="btn-save" id="btn-modal-save">Save</button>
         </div>
       </form>
+      <div class="activity-section" id="activity-section">
+        <h3 class="activity-heading">Activity</h3>
+        <div class="activity-list" id="activity-list"></div>
+      </div>
     </div>
   </div>
 
@@ -800,6 +998,7 @@
     /* ------------------------------------------------------------------ */
     let tasks = [];
     let editingTaskId = null;   // null = create mode; set = edit mode
+    let overdueFilterActive = false;
 
     /* ------------------------------------------------------------------ */
     /* HELPERS                                                             */
@@ -820,6 +1019,13 @@
       return div.innerHTML;
     }
 
+    /** Format an ISO date string (YYYY-MM-DD) into a short readable form. */
+    function formatDate(isoDate) {
+      if (!isoDate) return "";
+      const d = new Date(isoDate + "T00:00:00");
+      return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    }
+
     /** Return a stable id-based comparator for tie-breaking. */
     function compareById(a, b) {
       const idA = a.id || "";
@@ -831,8 +1037,10 @@
     /* FETCH                                                               */
     /* ------------------------------------------------------------------ */
 
-    async function fetchTasks() {
-      const response = await fetch(`${API_BASE}/tasks`);
+    async function fetchTasks(params = {}) {
+      const url = new URL(`${API_BASE}/tasks`);
+      if (params.overdue) url.searchParams.set("overdue", "true");
+      const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error(`Fetch failed: ${response.status} ${response.statusText}`);
       }
@@ -982,6 +1190,23 @@
         assignee.textContent = "Unassigned";
       }
 
+      // Due date
+      if (task.due_date) {
+        const dueDate = new Date(task.due_date + "T00:00:00");
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (dueDate < today && task.status !== "Done") {
+          const overduePill = document.createElement("span");
+          overduePill.className = "overdue-pill";
+          overduePill.textContent = "Overdue";
+          metaLeft.appendChild(overduePill);
+        }
+        const dueEl = document.createElement("span");
+        dueEl.className = "due-date";
+        dueEl.textContent = formatDate(task.due_date);
+        metaLeft.appendChild(dueEl);
+      }
+
       // Edit button
       const editBtn = document.createElement("button");
       editBtn.className = "btn-edit";
@@ -1049,7 +1274,9 @@
       document.getElementById("field-status").value = "ToDo";
       document.getElementById("field-priority").value = "Medium";
       document.getElementById("field-assignee").value = "";
+      document.getElementById("field-due-date").value = "";
       clearModalErrors();
+      clearActivity();
       document.getElementById("modal-overlay").classList.add("open");
       document.getElementById("field-title").focus();
     }
@@ -1063,7 +1290,9 @@
       document.getElementById("field-status").value = task.status || "ToDo";
       document.getElementById("field-priority").value = task.priority || "Medium";
       document.getElementById("field-assignee").value = task.assignee || "";
+      document.getElementById("field-due-date").value = task.due_date || "";
       clearModalErrors();
+      fetchActivity(task.id).then(renderActivity);
       document.getElementById("modal-overlay").classList.add("open");
       document.getElementById("field-title").focus();
     }
@@ -1071,6 +1300,7 @@
     function closeModal() {
       document.getElementById("modal-overlay").classList.remove("open");
       clearModalErrors();
+      clearActivity();
     }
 
     async function handleModalSubmit(e) {
@@ -1089,6 +1319,7 @@
         status: document.getElementById("field-status").value,
         priority: document.getElementById("field-priority").value,
         assignee: document.getElementById("field-assignee").value.trim() || null,
+        due_date: document.getElementById("field-due-date").value || null,
       };
 
       const saveBtn = document.getElementById("btn-modal-save");
@@ -1109,6 +1340,129 @@
         saveBtn.disabled = false;
         saveBtn.textContent = "Save";
       }
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* ACTIVITY                                                            */
+    /* ------------------------------------------------------------------ */
+
+    async function fetchActivity(taskId) {
+      try {
+        const response = await fetch(
+          `${API_BASE}/tasks/${encodeURIComponent(taskId)}/activity`
+        );
+        if (!response.ok) return [];
+        return await response.json();
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function renderActivity(events) {
+      const section = document.getElementById("activity-section");
+      const list = document.getElementById("activity-list");
+      if (!section || !list) return;
+
+      if (!events || events.length === 0) {
+        list.innerHTML = `<div class="activity-empty">No activity yet.</div>`;
+        section.classList.add("visible");
+        return;
+      }
+
+      let html = "";
+      for (const evt of events) {
+        const time = new Date(evt.timestamp);
+        const timeStr = time.toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        });
+
+        let detail = "";
+        if (evt.event_type === "status_change" && evt.from_status && evt.to_status) {
+          detail = `<span class="activity-detail">${escapeHtml(evt.from_status)} → ${escapeHtml(evt.to_status)}</span>`;
+        }
+
+        const badgeClass = evt.event_type === "created" ? "created" : "status-change";
+        const badgeLabel = evt.event_type === "created" ? "Created" : "Status change";
+
+        html += `
+          <div class="activity-item">
+            <span class="activity-badge ${badgeClass}">${badgeLabel}</span>
+            <span class="activity-timestamp">${timeStr}</span>
+            ${detail}
+          </div>`;
+      }
+
+      list.innerHTML = html;
+      section.classList.add("visible");
+    }
+
+    function clearActivity() {
+      const section = document.getElementById("activity-section");
+      const list = document.getElementById("activity-list");
+      if (section) section.classList.remove("visible");
+      if (list) list.innerHTML = "";
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* GLOBAL ACTIVITY                                                     */
+    /* ------------------------------------------------------------------ */
+
+    async function fetchGlobalActivity() {
+      try {
+        const response = await fetch(`${API_BASE}/activity`);
+        if (!response.ok) return [];
+        return await response.json();
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function renderGlobalActivity(events) {
+      const panel = document.getElementById("activity-panel");
+      const list = document.getElementById("activity-panel-list");
+      if (!panel || !list) return;
+
+      if (!events || events.length === 0) {
+        list.innerHTML = `<div class="activity-empty">No activity yet.</div>`;
+        return;
+      }
+
+      let html = "";
+      for (const evt of events) {
+        const task = tasks.find(t => t.id === evt.task_id);
+        const taskTitle = task ? escapeHtml(task.title) : escapeHtml(evt.task_id);
+
+        const time = new Date(evt.timestamp);
+        const timeStr = time.toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        });
+
+        let detail = "";
+        if (evt.event_type === "status_change" && evt.from_status && evt.to_status) {
+          detail = `<div class="activity-detail">${escapeHtml(evt.from_status)} → ${escapeHtml(evt.to_status)}</div>`;
+        }
+
+        const badgeClass = evt.event_type === "created" ? "created" : "status-change";
+        const badgeLabel = evt.event_type === "created" ? "Created" : "Status change";
+
+        html += `
+          <div class="activity-panel-item">
+            <div class="activity-item-row">
+              <span class="activity-badge ${badgeClass}">${badgeLabel}</span>
+              <span class="activity-timestamp">${timeStr}</span>
+            </div>
+            <div class="activity-task-title">${taskTitle}</div>
+            ${detail}
+          </div>`;
+      }
+
+      list.innerHTML = html;
     }
 
     /* ------------------------------------------------------------------ */
@@ -1230,6 +1584,7 @@
       // Persist to server
       try {
         await patchTaskStatus(draggedTaskId, targetStatus);
+        fetchGlobalActivity().then(renderGlobalActivity);
       } catch (err) {
         // Revert on failure
         task.status = previousStatus;
@@ -1282,9 +1637,12 @@
     async function loadTasks() {
       setBoardState("loading");
       try {
-        await fetchTasks();
+        const params = {};
+        if (overdueFilterActive) params.overdue = true;
+        await fetchTasks(params);
         renderBoard(tasks);
         setBoardState(tasks.length === 0 ? "empty" : "ready");
+        fetchGlobalActivity().then(renderGlobalActivity);
       } catch (err) {
         console.error("Failed to load tasks:", err);
         setBoardState("error");
@@ -1299,6 +1657,13 @@
 
     // New Task button
     document.getElementById("btn-new-task").addEventListener("click", openCreateModal);
+
+    // Overdue filter toggle
+    document.getElementById("btn-filter-overdue").addEventListener("click", function () {
+      overdueFilterActive = !overdueFilterActive;
+      this.classList.toggle("active", overdueFilterActive);
+      loadTasks();
+    });
 
     // Modal dismissals
     document.getElementById("btn-modal-close").addEventListener("click", closeModal);

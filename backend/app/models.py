@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 from typing import Optional
 
@@ -25,6 +25,7 @@ class TaskCreate(BaseModel):
     status: TaskStatus = TaskStatus.TODO
     priority: TaskPriority = TaskPriority.MEDIUM
     assignee: Optional[str] = None
+    due_date: Optional[date] = None
 
     @field_validator("title")
     @classmethod
@@ -45,6 +46,7 @@ class TaskUpdate(BaseModel):
     status: Optional[TaskStatus] = None
     priority: Optional[TaskPriority] = None
     assignee: Optional[str] = None
+    due_date: Optional[date] = None
 
     @field_validator("title")
     @classmethod
@@ -67,5 +69,21 @@ class TaskResponse(BaseModel):
     status: TaskStatus
     priority: TaskPriority
     assignee: Optional[str]
+    due_date: Optional[date] = None
     created_at: datetime
     updated_at: datetime
+
+
+class ActivityEventType(str, Enum):
+    CREATED = "created"
+    STATUS_CHANGE = "status_change"
+
+
+class ActivityEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    task_id: str
+    event_type: ActivityEventType
+    timestamp: datetime
+    from_status: Optional[TaskStatus] = None
+    to_status: Optional[TaskStatus] = None

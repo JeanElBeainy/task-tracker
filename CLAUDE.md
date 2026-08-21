@@ -29,7 +29,7 @@ pytest -v -k "test_create_task_valid"
 pytest --collect-only
 
 # Run 8 model-level validation checks (no pytest needed)
-python tests/verify_a.py
+PYTHONPATH=. python scripts/verify_a.py
 ```
 
 The frontend has no build step — open [frontend/index.html](frontend/index.html) in a browser (served from port 5500 to match the CORS allowlist, e.g. `cd frontend && python3 -m http.server 5500`). The backend must be running on port 8000 first.
@@ -46,7 +46,7 @@ backend/
   tests/conftest.py          # Fixtures: storage reset, TestClient, created_task
   tests/test_health.py       # 3 health endpoint tests
   tests/test_tasks.py        # 28 CRUD + due-date + overdue-filter tests
-  tests/verify_a.py          # 8 standalone model-level Pydantic checks
+  scripts/verify_a.py        # 8 standalone model-level Pydantic checks
 ```
 
 ### Key design decisions

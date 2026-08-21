@@ -25,7 +25,7 @@ pytest -v
 pytest -v tests/test_tasks.py
 pytest --collect-only
 
-python scripts/verify_a.py
+PYTHONPATH=. python scripts/verify_a.py
 ```
 
 The frontend calls `http://localhost:8000`. Backend CORS explicitly permits origins on port 5500. To serve the static frontend locally, run this from `frontend/`.
@@ -41,7 +41,7 @@ docker build -t task-tracker .
 docker run -p 8000:8000 task-tracker
 ```
 
-No `pyproject.toml`, frontend build command, linter command, formatter command, or active CI workflow is confirmed by the files inspected.
+No `pyproject.toml`, frontend build command, linter command, or formatter command is confirmed by the files inspected. A GitHub Actions CI workflow exists at `.github/workflows/ci.yml`: it runs `pytest -v` with Python 3.11 on push and pull_request.
 
 ## Visible business rules
 

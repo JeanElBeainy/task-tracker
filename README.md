@@ -25,7 +25,8 @@ task-tracker/
 │   ├── tests/
 │   │   ├── conftest.py       # Fixtures (TestClient, storage reset, created_task)
 │   │   ├── test_health.py    # 3 tests
-│   │   ├── test_tasks.py     # 28 tests (CRUD, due dates, overdue filter)
+│   │   └── test_tasks.py     # 28 tests (CRUD, due dates, overdue filter)
+│   ├── scripts/
 │   │   └── verify_a.py       # 8 model-level validation checks
 │   └── requirements.txt
 ├── frontend/
@@ -93,10 +94,10 @@ pytest -v tests/test_tasks.py
 pytest --collect-only
 ```
 
-All 31 tests pass in ~0.10s. The `verify_a.py` script can also be run directly for 8 model-level validation checks:
+All 31 tests pass (`pytest -v`: 31 passed in ~0.1s, re-run 2026-08-21). The `verify_a.py` script runs 8 model-level validation checks:
 
 ```bash
-python tests/verify_a.py
+PYTHONPATH=. python scripts/verify_a.py
 ```
 
 ---
@@ -131,3 +132,68 @@ python tests/verify_a.py
 - **Overdue**: computed at request time — a task is overdue when `due_date < today` **and** `status != Done`. No persisted `is_overdue` field.
 
 The full interactive API reference with request/response schemas is at [http://localhost:8000/docs](http://localhost:8000/docs) when the server is running.
+
+---
+
+## Final Project
+
+This section is the course closeout: the commands that actually work in this repo, the evidence for each module, and how AI was used along the way.
+
+### Commands
+
+Run backend commands from `backend/`, frontend commands from `frontend/`.
+
+```bash
+# --- Backend: run tests (31 tests) ---
+cd backend
+source venv/bin/activate
+pytest -v
+
+# --- Backend: model-level validation checks (8 checks) ---
+PYTHONPATH=. python scripts/verify_a.py
+
+# --- Backend: run the API ---
+uvicorn app.main:app --reload --port 8000
+```
+
+```bash
+# --- Frontend: serve the static board (no build step) ---
+cd frontend
+python3 -m http.server 5500
+```
+
+```bash
+# --- Docker: build, run, verify, stop ---
+cd backend
+docker build -t task-tracker:dev .
+docker run --rm -d -p 8000:8000 --name tt-dev task-tracker:dev
+curl -i http://localhost:8000/health    # expect 200 {"status":"ok", ...}
+docker exec tt-dev whoami               # expect: app (non-root)
+docker stop tt-dev
+```
+
+### Evidence links
+
+| Artifact | File |
+|---|---|
+| Release evidence (commands actually run, CI, Docker) | [docs/release-evidence.md](docs/release-evidence.md) |
+| Claim-vs-reality log (doc inaccuracies caught and fixed) | [docs/claim-vs-reality.md](docs/claim-vs-reality.md) |
+| Final AI review (Useful / Noise / Wrong triage) | [docs/final-ai-review.md](docs/final-ai-review.md) |
+| Test results, verify_a output, browser checklist, red-run evidence | [docs/verification.md](docs/verification.md) |
+| Security review (grades, reconciliation, top-3 backlog) | [docs/security-review.md](docs/security-review.md) |
+| Architecture + context-strategy comparison (A/B/C) | [docs/architecture.md](docs/architecture.md) |
+| Comments feature plan (generic vs repo-grounded) | [docs/decisions/comments-feature-plan.md](docs/decisions/comments-feature-plan.md) |
+| CI technical note | [docs/decisions/ci-workflow-design.md](docs/decisions/ci-workflow-design.md) |
+| Governance worksheet (what was shared with AI + risk levels) | [docs/governance-worksheet.md](docs/governance-worksheet.md) |
+| Personal AI playbook + Decision Card | [docs/ai-playbook.md](docs/ai-playbook.md) |
+| Prompt log (weak → improved prompts, accepted/edited/rejected) | [docs/prompt-log.md](docs/prompt-log.md) |
+| Tool-fit reflection | [docs/reflection.md](docs/reflection.md) |
+| CI workflow | [.github/workflows/ci.yml](.github/workflows/ci.yml) |
+
+### AI-use summary
+
+- **What AI built:** the Kanban board, the due-dates/overdue-filter feature, and the activity log were implemented with AI assistance; every prompt is logged weak → improved with an "accepted / edited / rejected" note in [docs/prompt-log.md](docs/prompt-log.md).
+- **Which tools:** feature work started in Cursor, then moved to DeepSeek running through Claude Code in VSCode (see [docs/reflection.md](docs/reflection.md)); Module 5 review, planning, governance, and context experiments were done in Codex App with a read-first, docs-first posture (see [AGENTS.md](AGENTS.md)).
+- **How AI output was graded, not accepted:** security findings were graded Valid / False Positive / Noise ([docs/security-review.md](docs/security-review.md)), review comments triaged Useful / Noise / Wrong ([docs/final-ai-review.md](docs/final-ai-review.md)), plan sections labeled Right / Missing / Needs-Resequencing ([docs/decisions/comments-feature-plan.md](docs/decisions/comments-feature-plan.md)), and four documentation claims were caught not matching the code and fixed ([docs/claim-vs-reality.md](docs/claim-vs-reality.md)).
+- **Governance:** everything shared with AI was classified Low risk (public course repo, synthetic data, no secrets — [docs/governance-worksheet.md](docs/governance-worksheet.md)); `.env` and secrets were never shared.
+- **Rules I keep:** the one-page playbook in [docs/ai-playbook.md](docs/ai-playbook.md) — never paste secrets/API keys into an AI tool, read and verify everything before committing, and review the first outputs closely because that is where corrections are still cheap.

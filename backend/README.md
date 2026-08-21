@@ -124,14 +124,20 @@ multi-stage build — dependencies are installed in a `builder` stage, then only
 the virtual environment and application code are copied into the slim runtime
 image, which runs as a non-root `app` user.
 
-## 7. CI workflow summary [VERIFY]
+## 7. CI workflow summary
 
-No `.github/workflows/ci.yml` was found in the repository. [VERIFY] When a CI
-workflow is added, it should:
+The repository contains a GitHub Actions workflow at
+`.github/workflows/ci.yml`:
 
-- Trigger on pushes and pull requests to `main`.
-- Install Python 3.11, restore dependencies from `requirements.txt`, and run
-  `pytest -v` inside `backend/`.
+- Triggers on `push` and `pull_request`.
+- Runs `ubuntu-latest` with Python 3.11.
+- Installs `requirements.txt` and runs `pytest -v` inside `backend/`.
+- Contains no `continue-on-error`, `|| true`, or `--exit-zero` shortcuts.
+
+Ten CI runs are recorded on GitHub for this workflow; all ten completed with
+conclusion `success` (checked via the public GitHub API on 2026-08-21). The
+most recent run is on the `final-project` branch:
+<https://github.com/JeanElBeainy/task-tracker/actions/runs/32243302797>
 
 ## 8. Project structure
 

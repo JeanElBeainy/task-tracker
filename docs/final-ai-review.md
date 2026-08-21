@@ -1,41 +1,51 @@
-# Final AI Review
+# Final AI Review and Ownership Evidence
 
-Final review of the submission diff on branch `final-project` before release, run on 2026-08-21 (Module 4 Part 4.5 prompts R1/R2: review a real diff, then triage every comment as Useful, Noise, or Wrong). The review covered the pending documentation changes plus the release state of the repo. Every comment below was verified against the cited files before it was triaged.
+This file follows the template from the final project brief. It records how AI output was reviewed, graded, corrected, or rejected for this submission. Branch: final-project. Date: August 21, 2026.
 
-## 1. AI review comments
+## AGENTS.md guardrails
 
-| ID | File / location | Severity | Category | Issue | Evidence from the diff or repo |
-|----|-----------------|----------|----------|-------|--------------------------------|
-| R-01 | `README.md` (project tree, Running Tests) | medium | docs | Tree lists `verify_a.py` under `backend/tests/` and the command `python tests/verify_a.py` points at a nonexistent path. | `backend/scripts/verify_a.py` is the real file; `backend/tests/` contains only the pytest files. Running the old command fails with `ModuleNotFoundError: No module named 'app'`. |
-| R-02 | `CLAUDE.md` (Commands, Architecture) | medium | docs | Same wrong path: `python tests/verify_a.py` and `tests/verify_a.py` in the architecture block. | Verified against `backend/scripts/verify_a.py` and the session run output. |
-| R-03 | `backend/README.md` section 7 | medium | docs | Claims "No `.github/workflows/ci.yml` was found in the repository" — the workflow exists and has been running. | `.github/workflows/ci.yml` (push + pull_request, Python 3.11, `pytest -v`, no false-green flags); GitHub API shows 10 runs, all `success`. |
-| R-04 | `AGENTS.md` (Confirmed commands) | medium | docs | Two issues: the confirmed command `python scripts/verify_a.py` fails as written (import path), and the file states no active CI workflow is confirmed even though `ci.yml` exists. | Direct run → `ModuleNotFoundError`; `PYTHONPATH=. python scripts/verify_a.py` → 8/8 PASS. `ci.yml` inspected line by line. |
-| R-05 | `docs/governance-worksheet.md` (What I Shared table) | low | docs | Two cells are still `TODO` in a final artifact: the "Any real external data used by mistake" row and one ambiguity cell. | Read the worksheet: `TODO` appears in the row and its "Ambiguity to resolve" cell. The answer must come from the student's history, not from AI. |
-| R-06 | `backend/.env` (untracked) | low | security | Local `.env` exists next to the app — check whether it can be committed. | `git ls-files` shows only `backend/.env.example` is tracked; `backend/.gitignore` line 8 ignores `.env`. Safe, nothing to change. |
-| R-07 | `backend/Dockerfile` (EXPOSE 8000) | low | Docker | `EXPOSE` does not publish the port — it is informational only. | Dockerfile comment already says "informational — does not publish"; `docker run -p 8000:8000` does the publishing. Nothing to change. |
-| R-08 | `README.md` API overview, POST/DELETE status codes | — | docs | Suspicion: does POST `/tasks` really return 201 and DELETE 204 as the README claims? | Verified in `backend/app/main.py`: line 49 `status_code=status.HTTP_201_CREATED`, line 172 `status_code=status.HTTP_204_NO_CONTENT`. The README claims are correct. |
-| R-09 | `CLAUDE.md` "~1700 lines" for `frontend/index.html` | — | docs | Suspicion: the line-count estimate may be stale. | `wc -l frontend/index.html` → 1703 lines. The claim is correct. |
+* Repo specific stack and commands included: yes (AGENTS.md, Confirmed commands section)
+* Docs first and read first guardrail included: yes (AGENTS.md, Module 5 operating guardrails)
+* Unexpected app and frontend edits rule included: yes (AGENTS.md says do not modify app/, backend/app/, or frontend/ unless the user approves one specific minimal fix)
 
-## 2. Triage
+## AI code review mini log
 
-| Comment | Bucket | Evidence found (where I checked) | Action |
-|---------|--------|----------------------------------|--------|
-| R-01 | **Useful** | `backend/scripts/verify_a.py` exists; old command actually fails (run this session). | Fixed: README tree + command corrected to `PYTHONPATH=. python scripts/verify_a.py`. Logged in [claim-vs-reality.md](claim-vs-reality.md) row 1. |
-| R-02 | **Useful** | Same failure reproduced; CLAUDE.md paths wrong in two places. | Fixed: both CLAUDE.md locations corrected. Logged in [claim-vs-reality.md](claim-vs-reality.md) row 2. |
-| R-03 | **Useful** | `ci.yml` read line by line; GitHub API fetched (10 runs, all success). | Fixed: `backend/README.md` section 7 rewritten with the real workflow and run link. Logged in [claim-vs-reality.md](claim-vs-reality.md) row 3. |
-| R-04 | **Useful** | Command failure and CI file both verified. | Fixed: AGENTS.md command corrected and the CI sentence replaced. Logged in [claim-vs-reality.md](claim-vs-reality.md) rows 3–4. |
-| R-05 | **Useful** | `TODO` cells visible in the worksheet. | Student action before submission: answer the "real external data" row (e.g. "None — only synthetic course data was shared" if that is true). Not something AI may invent — also flagged in [release-evidence.md](release-evidence.md) section 6. |
-| R-06 | **Noise** | `.env` is git-ignored (`.gitignore:8`) and untracked; only `.env.example` is committed. | Skip — already safe; keep the ignore rule. |
-| R-07 | **Noise** | Dockerfile comment already documents the same fact. | Skip — cosmetic, no action. |
-| R-08 | **Wrong** | `main.py:49` and `main.py:172` confirm 201 and 204. | No fix — the docs were right; the comment misread the risk. |
-| R-09 | **Wrong** | `wc -l frontend/index.html` = 1703. | No fix — the estimate was accurate. |
+The AI reviewed the final submission diff. Every comment below was checked against the actual files before grading.
 
-Summary: 5 Useful (4 fixed in this session, 1 needs my answer), 2 Noise (skipped with reasons), 2 Wrong (verified against code and rejected; no imaginary fixes were made).
+| AI comment | Grade | Reason | Verification or decision |
+|---|---|---|---|
+| README points to tests/verify_a.py, but the file lives in scripts/ | Useful | The path is wrong and the old command fails | Fixed the README. See docs/claim-vs-reality.md row 1 |
+| CLAUDE.md points to tests/verify_a.py in two places | Useful | Same wrong path | Fixed CLAUDE.md. See docs/claim-vs-reality.md row 2 |
+| backend/README.md says no ci.yml exists | Useful | The workflow file exists and has 10 green runs | Rewrote that section. See docs/claim-vs-reality.md row 3 |
+| The governance worksheet still has TODO cells | Useful | Two cells are unanswered in a final artifact | Answer them before submitting. AI must not invent this |
+| backend/.env exists on disk | Noise | It is git ignored and not tracked, so there is no risk | Skip. No change needed |
+| POST /tasks may return 200 instead of 201 | Wrong | backend/app/main.py line 49 returns 201. The README was right | No fix. The comment was rejected |
+| frontend/index.html may not be 1700 lines | Wrong | wc -l shows 1703 lines. The claim was right | No fix. The comment was rejected |
 
-## 3. What AI caught vs. what I had already caught
+## AI security mini review
 
-Two of the Useful items were already visible in my own earlier review work: docs/architecture-A.md had flagged the README's stale verify_a.py path (line 48), and docs/decisions/comments-feature-plan.md had noted that README and CLAUDE.md were stale while AGENTS.md was correct (line 13). The AI review added the two I had not recorded: the backend/README.md "no ci.yml" claim (which contradicted the workflow that has been running for weeks) and the fact that the AGENTS.md verify_a.py command itself fails without PYTHONPATH=.
+These findings come from docs/security-review.md. Each one has file evidence.
 
-## 4. My personal AI-review rule
+| Finding | File evidence | Grade | Reason | Next action |
+|---|---|---|---|---|
+| No authentication on any task endpoint | backend/app/main.py has no auth imports or access checks | Valid | Real risk outside the course, but it is a documented scope decision | Keep as a known limit. Do not add auth in this project |
+| Description and assignee have no length limit | backend/app/models.py lines 36 and 39, in memory storage | Noise | True, but it is generic hardening advice with no action in course scope | No action |
+| Dependencies are pinned without hashes | backend/requirements.txt | Noise | Standard supply chain advice, no real impact in this scope | No action |
 
-I will use an AI review for broad first-pass coverage of a diff, but I will only act on a comment after I have verified it myself against the cited file or a real run, because this review's two wrong comments both looked plausible until I checked the code.
+## Manual security check
+
+I checked backend/.env myself. Git ignores it (backend/.gitignore line 8) and it is not tracked, so no secret can be committed by accident. I also read the CORS settings in backend/app/main.py and confirmed only http://localhost:5500 and http://127.0.0.1:5500 are allowed. I found no new issue.
+
+## One AI output I rejected or corrected
+
+The AI review suggested the README could be wrong about the response codes for POST and DELETE. I opened backend/app/main.py and found line 49 returns 201 and line 172 returns 204, so the README was correct. I rejected that comment and made no change. Earlier, AI generated docs placed verify_a.py in tests/ and claimed no CI file exists. I corrected both claims in the README, CLAUDE.md, AGENTS.md, and backend/README.md, and recorded them in docs/claim-vs-reality.md.
+
+## Three AI usage rules
+
+1. Never paste: secrets, API keys, .env files, tokens, real customer data, or production logs into an AI tool.
+2. Always verify: run the tests, read the diff, and compare each claim against the real file or a live run before accepting it.
+3. Record AI contributions by: keeping a prompt log with the weak version, the improved version, and an accepted, edited, or rejected note. See docs/prompt-log.md.
+
+## Ownership statement
+
+I can explain the main parts of this repo, including the status rules in backend/app/business_rules.py, the storage in backend/app/storage.py, and the board logic in frontend/index.html. I ran the test suite and the Docker checks myself, and I checked every claim in the evidence docs against the actual files. I graded AI output as Useful, Noise, or Wrong instead of accepting it, and I fixed or rejected anything I could not support with evidence. For these reasons I am comfortable submitting this repository as my own work.

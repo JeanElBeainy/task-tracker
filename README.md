@@ -1,15 +1,15 @@
 # Task Tracker
 
-A Kanban board for managing tasks — create, edit, drag-and-drop, and track activity. Built with a FastAPI backend and a vanilla HTML/CSS/JS frontend.
+A Kanban board for managing tasks. Create, edit, and drag and drop tasks, and track activity. Built with a FastAPI backend and a vanilla HTML/CSS/JS frontend.
 
 ## Features
 
-- **Three-column Kanban board** — To Do, In Progress, Done
-- **Drag-and-drop** — move tasks between columns with visual feedback and rollback on error
-- **Due dates** — set optional due dates; overdue tasks get a red pill and a dedicated filter toggle
-- **Activity log** — per-task history (creation and status changes) plus a global activity sidebar
-- **Priority badges** — Low, Medium, High with color-coded cards
-- **In-memory storage** — no database setup required; data is reset on server restart
+* **Three column Kanban board:** To Do, In Progress, Done
+* **Drag and drop:** move tasks between columns with visual feedback and rollback on error
+* **Due dates:** set optional due dates. Overdue tasks get a red pill and a dedicated filter toggle
+* **Activity log:** per task history for creation and status changes, plus a global activity sidebar
+* **Priority badges:** Low, Medium, High on color coded cards
+* **In memory storage:** no database setup required. Data resets on server restart
 
 ## Project Structure
 
@@ -19,7 +19,7 @@ task-tracker/
 │   ├── app/
 │   │   ├── main.py           # FastAPI app + 8 endpoints
 │   │   ├── models.py         # Pydantic v2 models (TaskCreate, TaskUpdate, TaskResponse, ActivityEvent)
-│   │   ├── storage.py        # In-memory task + activity store
+│   │   ├── storage.py        # In memory task + activity store
 │   │   ├── business_rules.py # Status transition validation
 │   │   └── data/             # Reserved for file persistence
 │   ├── tests/
@@ -27,10 +27,10 @@ task-tracker/
 │   │   ├── test_health.py    # 3 tests
 │   │   └── test_tasks.py     # 28 tests (CRUD, due dates, overdue filter)
 │   ├── scripts/
-│   │   └── verify_a.py       # 8 model-level validation checks
+│   │   └── verify_a.py       # 8 model level validation checks
 │   └── requirements.txt
 ├── frontend/
-│   └── index.html            # Single-page Kanban board (no build step)
+│   └── index.html            # Single page Kanban board (no build step)
 └── docs/
     ├── mini-adr.md           # Architecture decisions (due dates, activity log)
     ├── user-stories.md       # Feature user stories with acceptance criteria
@@ -41,8 +41,8 @@ task-tracker/
 
 ## Prerequisites
 
-- **Python 3.11+**
-- A modern web browser
+* **Python 3.11+**
+* A modern web browser
 
 ---
 
@@ -61,7 +61,7 @@ source venv/bin/activate      # Linux/macOS
 # Install dependencies
 pip install -r requirements.txt
 
-# Copy environment file (optional — defaults work out of the box)
+# Copy the environment file, optional, defaults work out of the box
 cp .env.example .env
 
 # Start the server
@@ -74,7 +74,7 @@ The API runs at **http://localhost:8000**. While the server is running, browse t
 
 Open [frontend/index.html](frontend/index.html) directly in your browser. The frontend expects the backend to be running on port 8000, so start the backend first.
 
-The frontend is a single static HTML file — no build step, no bundler, no framework. Open it with `file://` or serve it with any HTTP server (e.g. `python3 -m http.server 5500` from the `frontend/` directory, which matches the CORS allowlist on the backend).
+The frontend is a single static HTML file with no build step, no bundler, and no framework. Open it with `file://` or serve it with any HTTP server (e.g. `python3 -m http.server 5500` from the `frontend/` directory, which matches the CORS allowlist on the backend).
 
 ### 3. Running Tests
 
@@ -94,7 +94,7 @@ pytest -v tests/test_tasks.py
 pytest --collect-only
 ```
 
-All 31 tests pass (`pytest -v`: 31 passed in ~0.1s, re-run 2026-08-21). The `verify_a.py` script runs 8 model-level validation checks:
+All 31 tests pass (`pytest -v`: 31 passed in about 0.1 seconds, checked August 21, 2026). The `verify_a.py` script runs 8 model level validation checks:
 
 ```bash
 PYTHONPATH=. python scripts/verify_a.py
@@ -110,7 +110,7 @@ PYTHONPATH=. python scripts/verify_a.py
 | POST   | `/tasks`                 | Create a new task (returns 201)                  |
 | GET    | `/tasks`                 | List tasks; optional `?status=`, `?priority=`, `?overdue=true` |
 | GET    | `/tasks/{id}`            | Get a single task (404 if missing)               |
-| PATCH  | `/tasks/{id}`            | Partial update — any subset of fields (404/422)  |
+| PATCH  | `/tasks/{id}`            | Partial update with any subset of fields (404/422) |
 | DELETE | `/tasks/{id}`            | Delete a task and its activity history (204/404) |
 | GET    | `/tasks/{id}/activity`   | Per-task activity, oldest first (404 if missing) |
 | GET    | `/activity`              | Global activity feed, newest first               |
@@ -119,7 +119,7 @@ PYTHONPATH=. python scripts/verify_a.py
 
 | Field         | Type                  | Required | Default    |
 |---------------|-----------------------|----------|------------|
-| `title`       | string (1–200 chars)  | yes      | —          |
+| `title`       | string (1 to 200 chars) | yes    | none       |
 | `description` | string                | no       | `""`       |
 | `status`      | `ToDo` \| `InProgress` \| `Done` | no | `ToDo` |
 | `priority`    | `Low` \| `Medium` \| `High` | no | `Medium` |
@@ -128,8 +128,8 @@ PYTHONPATH=. python scripts/verify_a.py
 
 ### Business rules
 
-- **Status transitions**: ToDo → InProgress, InProgress → Done, Done → InProgress. Skipping a column (ToDo → Done) returns 422.
-- **Overdue**: computed at request time — a task is overdue when `due_date < today` **and** `status != Done`. No persisted `is_overdue` field.
+* **Status transitions:** ToDo to InProgress, InProgress to Done, Done to InProgress. Skipping a column (ToDo to Done) returns 422.
+* **Overdue:** computed at request time. A task is overdue when `due_date < today` and `status != Done`. No persisted `is_overdue` field.
 
 The full interactive API reference with request/response schemas is at [http://localhost:8000/docs](http://localhost:8000/docs) when the server is running.
 
@@ -137,38 +137,46 @@ The full interactive API reference with request/response schemas is at [http://l
 
 ## Final Project
 
-This section is the course closeout: the commands that actually work in this repo, the evidence for each module, and how AI was used along the way.
+Branch reviewed: final-project
+
+This section is the course closeout. It lists the commands that work in this repo, the evidence for each module, and how AI was used along the way.
+
+### What this submission demonstrates
+* The Task Tracker app still runs inside the course scope.
+* CI runs the pytest suite on push and pull request.
+* The Docker image builds and runs, and /health returns 200.
+* AI review, security, and ownership evidence lives in docs/.
 
 ### Commands
 
 Run backend commands from `backend/`, frontend commands from `frontend/`.
 
 ```bash
-# --- Backend: run tests (31 tests) ---
+# Run the backend tests (31 tests)
 cd backend
 source venv/bin/activate
 pytest -v
 
-# --- Backend: model-level validation checks (8 checks) ---
+# Run the model level validation checks (8 checks)
 PYTHONPATH=. python scripts/verify_a.py
 
-# --- Backend: run the API ---
+# Run the API
 uvicorn app.main:app --reload --port 8000
 ```
 
 ```bash
-# --- Frontend: serve the static board (no build step) ---
+# Serve the static board, no build step
 cd frontend
 python3 -m http.server 5500
 ```
 
 ```bash
-# --- Docker: build, run, verify, stop ---
+# Docker: build, run, verify, stop
 cd backend
 docker build -t task-tracker:dev .
 docker run --rm -d -p 8000:8000 --name tt-dev task-tracker:dev
 curl -i http://localhost:8000/health    # expect 200 {"status":"ok", ...}
-docker exec tt-dev whoami               # expect: app (non-root)
+docker exec tt-dev whoami               # expect: app (not root)
 docker stop tt-dev
 ```
 
@@ -177,23 +185,23 @@ docker stop tt-dev
 | Artifact | File |
 |---|---|
 | Release evidence (commands actually run, CI, Docker) | [docs/release-evidence.md](docs/release-evidence.md) |
-| Claim-vs-reality log (doc inaccuracies caught and fixed) | [docs/claim-vs-reality.md](docs/claim-vs-reality.md) |
+| Claim vs reality log (doc inaccuracies caught and fixed) | [docs/claim-vs-reality.md](docs/claim-vs-reality.md) |
 | Final AI review (Useful / Noise / Wrong triage) | [docs/final-ai-review.md](docs/final-ai-review.md) |
-| Test results, verify_a output, browser checklist, red-run evidence | [docs/verification.md](docs/verification.md) |
-| Security review (grades, reconciliation, top-3 backlog) | [docs/security-review.md](docs/security-review.md) |
-| Architecture + context-strategy comparison (A/B/C) | [docs/architecture.md](docs/architecture.md) |
-| Comments feature plan (generic vs repo-grounded) | [docs/decisions/comments-feature-plan.md](docs/decisions/comments-feature-plan.md) |
+| Test results, verify_a output, browser checklist, red run evidence | [docs/verification.md](docs/verification.md) |
+| Security review (grades, reconciliation, top three backlog) | [docs/security-review.md](docs/security-review.md) |
+| Architecture and context strategy comparison (A/B/C) | [docs/architecture.md](docs/architecture.md) |
+| Comments feature plan (generic vs repo grounded) | [docs/decisions/comments-feature-plan.md](docs/decisions/comments-feature-plan.md) |
 | CI technical note | [docs/decisions/ci-workflow-design.md](docs/decisions/ci-workflow-design.md) |
 | Governance worksheet (what was shared with AI + risk levels) | [docs/governance-worksheet.md](docs/governance-worksheet.md) |
 | Personal AI playbook + Decision Card | [docs/ai-playbook.md](docs/ai-playbook.md) |
-| Prompt log (weak → improved prompts, accepted/edited/rejected) | [docs/prompt-log.md](docs/prompt-log.md) |
-| Tool-fit reflection | [docs/reflection.md](docs/reflection.md) |
+| Prompt log (weak to improved prompts, accepted/edited/rejected) | [docs/prompt-log.md](docs/prompt-log.md) |
+| Tool fit reflection | [docs/reflection.md](docs/reflection.md) |
 | CI workflow | [.github/workflows/ci.yml](.github/workflows/ci.yml) |
 
-### AI-use summary
+### AI use summary
 
-- **What AI built:** the Kanban board, the due-dates/overdue-filter feature, and the activity log were implemented with AI assistance; every prompt is logged weak → improved with an "accepted / edited / rejected" note in [docs/prompt-log.md](docs/prompt-log.md).
-- **Which tools:** feature work started in Cursor, then moved to DeepSeek running through Claude Code in VSCode (see [docs/reflection.md](docs/reflection.md)); Module 5 review, planning, governance, and context experiments were done in Codex App with a read-first, docs-first posture (see [AGENTS.md](AGENTS.md)).
-- **How AI output was graded, not accepted:** security findings were graded Valid / False Positive / Noise ([docs/security-review.md](docs/security-review.md)), review comments triaged Useful / Noise / Wrong ([docs/final-ai-review.md](docs/final-ai-review.md)), plan sections labeled Right / Missing / Needs-Resequencing ([docs/decisions/comments-feature-plan.md](docs/decisions/comments-feature-plan.md)), and four documentation claims were caught not matching the code and fixed ([docs/claim-vs-reality.md](docs/claim-vs-reality.md)).
-- **Governance:** everything shared with AI was classified Low risk (public course repo, synthetic data, no secrets — [docs/governance-worksheet.md](docs/governance-worksheet.md)); `.env` and secrets were never shared.
-- **Rules I keep:** the one-page playbook in [docs/ai-playbook.md](docs/ai-playbook.md) — never paste secrets/API keys into an AI tool, read and verify everything before committing, and review the first outputs closely because that is where corrections are still cheap.
+* What AI built: the Kanban board, the due dates and overdue filter feature, and the activity log were built with AI help. Every prompt is logged with a weak version, an improved version, and an accepted, edited, or rejected note in [docs/prompt-log.md](docs/prompt-log.md).
+* Which tools: feature work started in Cursor, then moved to DeepSeek running through Claude Code in VSCode (see [docs/reflection.md](docs/reflection.md)). Module 5 review, planning, governance, and context experiments were done in Codex App with a read first, docs first posture (see [AGENTS.md](AGENTS.md)).
+* How AI output was graded, not accepted: security findings were graded Valid, False Positive, or Noise ([docs/security-review.md](docs/security-review.md)). Review comments were triaged as Useful, Noise, or Wrong ([docs/final-ai-review.md](docs/final-ai-review.md)). Plan sections were labeled Right, Missing, or Needs Resequencing ([docs/decisions/comments-feature-plan.md](docs/decisions/comments-feature-plan.md)). Four documentation claims were caught not matching the code and were fixed ([docs/claim-vs-reality.md](docs/claim-vs-reality.md)).
+* Governance: everything shared with AI was classified Low risk, since this is a public course repo with synthetic data and no secrets ([docs/governance-worksheet.md](docs/governance-worksheet.md)). The .env file and secrets were never shared.
+* Rules I keep: the playbook in [docs/ai-playbook.md](docs/ai-playbook.md). Never paste secrets or API keys into an AI tool. Read and verify everything before committing. Review the first outputs closely, because that is where corrections are still cheap.
